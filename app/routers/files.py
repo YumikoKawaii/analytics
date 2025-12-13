@@ -6,7 +6,7 @@ from minio.error import S3Error
 
 from app.models.service import Response, UploadFileRequest, GetFileRequest
 from app.packages import FileStat
-from app.services.file_service import FileService
+from app.handlers.services import FileService
 from app.exceptions import ServiceException
 
 router = APIRouter(prefix="/files", tags=["Files"])
