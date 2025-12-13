@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Depends
 from fastapi.encoders import jsonable_encoder
+from fastapi.concurrency import run_in_threadpool
 from fastapi_utils.cbv import cbv
 from minio.error import S3Error
 
@@ -10,6 +11,7 @@ from app.exceptions import ServiceException
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
+
 @cbv(router)
 class FileHandler:
     def __init__(self):
@@ -17,7 +19,10 @@ class FileHandler:
 
     @router.post("/upload", status_code=status.HTTP_200_OK, response_model=Response)
     async def upload_file(self, request: UploadFileRequest = Depends()):
-        data = await self.file_service.save_file(request.file)
+        data = await run_in_threadpool(
+            self.file_service.save_file,
+            request.file,
+        )
         return Response.success(data)
 
     @router.get("/{file_id}", response_model=Response[FileStat])

@@ -13,8 +13,8 @@ class FileService:
         self._minio = minio_client
         self._redis = redis_client
 
-    async def save_file(self, file: UploadFile) -> Dict[str, Any]:
-        contents = await file.read()
+    def save_file(self, file: UploadFile) -> Dict[str, Any]:
+        contents = file.file.read()
         file_hash = hashlib.sha256(contents).hexdigest()
         file_id = f"{file_hash[:16]}"
 
