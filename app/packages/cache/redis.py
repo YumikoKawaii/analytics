@@ -1,21 +1,17 @@
 import redis
 from typing import Any, Optional
-from app.config import settings
+from app.packages.infrastructure.redis import redis_cli
 import json
+
 
 class RedisClient:
     client: redis.Redis
+
     def __init__(self):
         self._initialize()
 
     def _initialize(self):
-        self.client = redis.Redis(
-            host=settings.redis_host,
-            port=settings.redis_port,
-            db=settings.redis_db,
-            password=settings.redis_password,
-            decode_responses=settings.redis_decode_responses
-        )
+        self.client = redis_cli
         self._test_connection()
 
     def _test_connection(self) -> None:
@@ -40,13 +36,13 @@ class RedisClient:
             return None
 
     def set(
-        self,
-        key: str,
-        value: Any,
-        ex: Optional[int] = None,
-        px: Optional[int] = None,
-        nx: bool = False,
-        xx: bool = False
+            self,
+            key: str,
+            value: Any,
+            ex: Optional[int] = None,
+            px: Optional[int] = None,
+            nx: bool = False,
+            xx: bool = False
     ) -> bool:
         try:
             return self.client.set(key, value, ex=ex, px=px, nx=nx, xx=xx)
@@ -54,11 +50,11 @@ class RedisClient:
             raise Exception(f"Failed to set key '{key}': {e}")
 
     def set_json(
-        self,
-        key: str,
-        value: dict | list,
-        ex: Optional[int] = None,
-        px: Optional[int] = None
+            self,
+            key: str,
+            value: dict | list,
+            ex: Optional[int] = None,
+            px: Optional[int] = None
     ) -> bool:
         try:
             json_value = json.dumps(value)
@@ -119,5 +115,6 @@ class RedisClient:
             return self.client.ping()
         except redis.RedisError:
             return False
+
 
 redis_client = RedisClient()

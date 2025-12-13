@@ -1,0 +1,1 @@
+FILES_TOPIC = "analytics.files"

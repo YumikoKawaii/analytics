@@ -8,6 +8,8 @@ from io import BytesIO
 
 from pydantic import BaseModel
 
+from app.packages.infrastructure.minio import minio_cli
+
 from app.config import settings
 
 
@@ -40,12 +42,7 @@ class MinioClient:
         self._initialize()
 
     def _initialize(self):
-        self.client = Minio(
-            endpoint=settings.minio_endpoint,
-            access_key=settings.minio_access_key,
-            secret_key=settings.minio_secret_key,
-            secure=settings.minio_secure
-        )
+        self.client = minio_cli
         self._ensure_bucket_exists()
 
     def _ensure_bucket_exists(self) -> None:

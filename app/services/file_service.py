@@ -4,14 +4,21 @@ from app.packages import minio_client, redis_client, MinioClient, RedisClient, F
 import hashlib
 from datetime import datetime, UTC
 
+from app.packages.constants.constants import FILES_TOPIC
+from app.packages.queues.prototypes import Publisher
+from app.packages.queues.redis import RedisPublisher
+from app.packages.infrastructure.redis import redis_cli
+
 
 class FileService:
     _minio: MinioClient
     _redis: RedisClient
+    _publisher: Publisher
 
     def __init__(self):
         self._minio = minio_client
         self._redis = redis_client
+        self._publisher = RedisPublisher(redis_cli)
 
     def save_file(self, file: UploadFile) -> Dict[str, Any]:
         contents = file.file.read()
@@ -27,6 +34,8 @@ class FileService:
                 "upload_timestamp": datetime.now(UTC).isoformat()
             }
         )
+
+        self._publisher.publish(FILES_TOPIC, file_id.encode())
 
         file_metadata = {
             "file_id": file_id,
