@@ -1,5 +1,5 @@
 from redis import Redis
-from typing import AsyncIterator
+from typing import Iterator
 
 class RedisPublisher:
     redis: Redis
@@ -12,13 +12,16 @@ class RedisPublisher:
 class RedisSubscriber:
     redis: Redis
 
-    async def subscribe(self, channel: str) -> AsyncIterator[bytes]:
-        sub = self.redis.pubsub()
-        await sub.subscribe(channel)
+    def __init__(self, redis: Redis):
+        self.redis = redis
 
-        async for msg in sub.listen():
+    def subscribe(self, channel: str) -> Iterator[bytes]:
+        pubsub = self.redis.pubsub()
+        pubsub.subscribe(channel)
+
+        for msg in pubsub.listen():
             if msg["type"] == "message":
                 yield msg["data"]
 
-    async def close(self) -> None:
+    def close(self) -> None:
         self.redis.close()

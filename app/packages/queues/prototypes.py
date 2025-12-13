@@ -1,4 +1,4 @@
-from typing import Protocol, AsyncIterator
+from typing import Protocol, Iterator
 
 
 class Publisher(Protocol):
@@ -6,5 +6,5 @@ class Publisher(Protocol):
 
 
 class Subscriber(Protocol):
-    async def subscribe(self, channel: str) -> AsyncIterator[bytes]: ...
-    async def close(self) -> None: ...
+    def subscribe(self, channel: str) -> Iterator[bytes]: ...
+    def close(self) -> None: ...
