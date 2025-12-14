@@ -24,7 +24,7 @@ def processor():
         proc.run()
     except KeyboardInterrupt:
         print("\nShutting down processor...")
-        proc.subscriber.close()
+        proc.terminate()
         print("Processor stopped.")
 
 if __name__ == "__main__":
