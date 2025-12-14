@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     minio_bucket: str = "analytics"
 
+    # Qdrant settings
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_grpc_port: int = 6334
+    qdrant_collection_name: str = "documents"
+    qdrant_api_key: str | None = None
+
     class Config:
         env_file = ".env"
         case_sensitive = False

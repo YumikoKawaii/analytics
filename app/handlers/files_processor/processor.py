@@ -2,23 +2,23 @@ from app.packages.queues.prototypes import Subscriber
 from app.packages.queues.redis import RedisSubscriber
 from app.packages.infrastructure.redis import redis_cli
 from app.packages.constants.constants import FILES_TOPIC
-from app.packages.storage import MinioClient
+from app.packages.storage import MinioClient, QdrantVectorStore
 from sentence_transformers import SentenceTransformer
 from io import BytesIO
 import PyPDF2
-import numpy as np
-import json
 
 
 class Processor:
     _subscriber: Subscriber
     _minio_client: MinioClient
     _transformer: SentenceTransformer
+    _vector_store: QdrantVectorStore
 
     def __init__(self):
         self._subscriber = RedisSubscriber(redis_cli)
         self._minio_client = MinioClient()
         self._transformer = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        self._vector_store = QdrantVectorStore()
 
     def run(self):
         print(f"Starting processor, subscribing to {FILES_TOPIC}...")
@@ -53,28 +53,14 @@ class Processor:
         embeddings = self._transformer.encode(chunks, show_progress_bar=True)
         print(f"Embeddings shape: {embeddings.shape}")
 
-        # # Store chunks as JSON
-        # chunks_data = json.dumps({"file_id": file_id, "chunks": chunks}, ensure_ascii=False)
-        # chunks_object_name = f"embeddings/{file_id}_chunks.json"
-        # self._minio_client.upload_file(
-        #     object_name=chunks_object_name,
-        #     data=chunks_data.encode('utf-8'),
-        #     content_type="application/json"
-        # )
-        # print(f"Saved chunks to: {chunks_object_name}")
-        #
-        # # Store embeddings as numpy array
-        # embeddings_bytes = BytesIO()
-        # np.save(embeddings_bytes, embeddings)
-        # embeddings_bytes.seek(0)
-        # embeddings_object_name = f"embeddings/{file_id}_embeddings.npy"
-        # self._minio_client.upload_file(
-        #     object_name=embeddings_object_name,
-        #     data=embeddings_bytes.read(),
-        #     content_type="application/octet-stream"
-        # )
-        # print(f"Saved embeddings to: {embeddings_object_name}")
-        # print(f"Successfully processed file: {file_id}")
+        # Store embeddings and chunks in Qdrant
+        result = self._vector_store.add_documents(
+            file_id=file_id,
+            chunks=chunks,
+            embeddings=embeddings,
+        )
+        print(f"Stored {result['num_chunks']} chunks in Qdrant with status: {result['status']}")
+        print(f"Successfully processed file: {file_id}")
 
 
 def extract_text_from_pdf(content: bytes) -> str:
